@@ -18,6 +18,14 @@
             <groupId>org.testautomation</groupId>
             <artifactId>test-automation-commons</artifactId>
         </dependency>
+        <!-- test-jar exposes CucumberSpringConfiguration to this module's test classpath -->
+        <dependency>
+            <groupId>org.testautomation</groupId>
+            <artifactId>test-automation-commons</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
