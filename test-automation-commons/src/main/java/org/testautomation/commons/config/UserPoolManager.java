@@ -64,8 +64,6 @@ public class UserPoolManager {
         log.info("UserPoolManager — pool={} users, semaphore={} slots", userPool.length, slots);
     }
 
-    // -------------------------------------------------------------------------
-
     public UserSession acquireUser() {
         try {
             if (!semaphore.tryAcquire(5, TimeUnit.MINUTES)) {
@@ -106,8 +104,6 @@ public class UserPoolManager {
         return session;
     }
 
-    // -------------------------------------------------------------------------
-
     /**
      * Returns the appropriate pool for the scenario — tag-specific if configured, else default.
      * Tag-specific pools are defined as: {@code test.users.pool.<tagName>=user1,user2}
@@ -125,8 +121,6 @@ public class UserPoolManager {
         }
         return userPool[index.getAndUpdate(i -> (i + 1) % userPool.length)];
     }
-
-    // -------------------------------------------------------------------------
 
     public static class UserSession {
         private final String username;

@@ -33,8 +33,6 @@ public class PlaywrightCurlCaptureService {
         return sb != null ? sb.toString() : "";
     }
 
-    // -------------------------------------------------------------------------
-
     private void captureRequest(Request request) {
         try {
             String curl = buildCurl(request);

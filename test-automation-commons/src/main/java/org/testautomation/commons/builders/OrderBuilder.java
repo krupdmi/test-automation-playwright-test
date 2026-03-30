@@ -25,27 +25,53 @@ public class OrderBuilder {
     private String status;
     private String description;
 
-    private OrderBuilder() {}
+    private OrderBuilder() {
+    }
 
-    /** Creates a builder pre-filled with random fake data. */
+    /**
+     * Creates a builder pre-filled with random fake data.
+     */
     public static OrderBuilder random() {
         return new OrderBuilder()
-                .withOrderId("ORD-" + FakeDataHelper.alphanumeric(8).toUpperCase())
-                .withUserId(FakeDataHelper.uuid())
-                .withAmount(BigDecimal.valueOf(FakeDataHelper.numberBetween(1, 500)))
-                .withCurrency("EUR")
-                .withStatus("PENDING")
-                .withDescription("Test order — " + FakeDataHelper.alphanumeric(6));
+            .withOrderId("ORD-" + FakeDataHelper.alphanumeric(8).toUpperCase())
+            .withUserId(FakeDataHelper.uuid())
+            .withAmount(BigDecimal.valueOf(FakeDataHelper.numberBetween(1, 500)))
+            .withCurrency("EUR")
+            .withStatus("PENDING")
+            .withDescription("Test order — " + FakeDataHelper.alphanumeric(6));
     }
 
     public static OrderBuilder empty() {
         return new OrderBuilder();
     }
 
-    public OrderBuilder withOrderId(String orderId)       { this.orderId     = orderId;     return this; }
-    public OrderBuilder withUserId(String userId)         { this.userId      = userId;      return this; }
-    public OrderBuilder withAmount(BigDecimal amount)     { this.amount      = amount;      return this; }
-    public OrderBuilder withCurrency(String currency)     { this.currency    = currency;    return this; }
-    public OrderBuilder withStatus(String status)         { this.status      = status;      return this; }
-    public OrderBuilder withDescription(String description){ this.description = description; return this; }
+    public OrderBuilder withOrderId(String orderId) {
+        this.orderId = orderId;
+        return this;
+    }
+
+    public OrderBuilder withUserId(String userId) {
+        this.userId = userId;
+        return this;
+    }
+
+    public OrderBuilder withAmount(BigDecimal amount) {
+        this.amount = amount;
+        return this;
+    }
+
+    public OrderBuilder withCurrency(String currency) {
+        this.currency = currency;
+        return this;
+    }
+
+    public OrderBuilder withStatus(String status) {
+        this.status = status;
+        return this;
+    }
+
+    public OrderBuilder withDescription(String description) {
+        this.description = description;
+        return this;
+    }
 }

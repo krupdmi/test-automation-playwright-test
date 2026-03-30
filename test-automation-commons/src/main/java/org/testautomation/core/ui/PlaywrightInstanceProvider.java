@@ -47,12 +47,12 @@ public class PlaywrightInstanceProvider {
 
     private final PlaywrightCurlCaptureService curlCaptureService;
 
-    private static final ConcurrentHashMap<Long, Playwright>     threadToPlaywright = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Long, Browser>        threadToBrowser    = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, Playwright> threadToPlaywright = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, Browser> threadToBrowser = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Long, BrowserContext> threadToBrowserCtx = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Long, Integer>        threadToPort       = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Long, Path>           threadToUserDir    = new ConcurrentHashMap<>();
-    private static final AtomicInteger                           portCounter        = new AtomicInteger(0);
+    private static final ConcurrentHashMap<Long, Integer> threadToPort = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, Path> threadToUserDir = new ConcurrentHashMap<>();
+    private static final AtomicInteger portCounter = new AtomicInteger(0);
 
     public PlaywrightInstanceProvider(PlaywrightCurlCaptureService curlCaptureService) {
         this.curlCaptureService = curlCaptureService;
@@ -90,10 +90,10 @@ public class PlaywrightInstanceProvider {
     public BrowserContext browserContext(Browser browser) {
         long tid = tid();
         BrowserContext ctx = browser.newContext(new Browser.NewContextOptions()
-                .setViewportSize(GenericConstants.VIEWPORT_WIDTH, GenericConstants.VIEWPORT_HEIGHT)
-                .setIgnoreHTTPSErrors(true)
-                .setJavaScriptEnabled(true)
-                .setBypassCSP(true));
+                                                    .setViewportSize(GenericConstants.VIEWPORT_WIDTH, GenericConstants.VIEWPORT_HEIGHT)
+                                                    .setIgnoreHTTPSErrors(true)
+                                                    .setJavaScriptEnabled(true)
+                                                    .setBypassCSP(true));
         blockUrls(ctx);
         curlCaptureService.setupRequestInterception(ctx);
         threadToBrowserCtx.put(tid, ctx);
@@ -112,7 +112,7 @@ public class PlaywrightInstanceProvider {
             d.dismiss();
         });
         page.onRequestFailed(r ->
-                log.warn("[Playwright] tid={} — request failed: {} {}", tid, r.url(), r.failure()));
+                                 log.warn("[Playwright] tid={} — request failed: {} {}", tid, r.url(), r.failure()));
         log.info("[Playwright] tid={} — Page created", tid);
         return page;
     }
@@ -127,7 +127,9 @@ public class PlaywrightInstanceProvider {
     // Cleanup
     // -------------------------------------------------------------------------
 
-    /** Release all Playwright resources for the current thread. Call from {@code @After}. */
+    /**
+     * Release all Playwright resources for the current thread. Call from {@code @After}.
+     */
     public static void cleanupThreadResources() {
         long tid = tid();
         log.info("[Playwright] tid={} — cleanup start", tid);
@@ -136,11 +138,13 @@ public class PlaywrightInstanceProvider {
         closeQuietly(threadToPlaywright.remove(tid));
         threadToPort.remove(tid);
         Path dir = threadToUserDir.remove(tid);
-        if (dir != null) dir.toFile().deleteOnExit();
+        if(dir != null) dir.toFile().deleteOnExit();
         log.info("[Playwright] tid={} — cleanup done", tid);
     }
 
-    /** Close every tracked resource across all threads — use in shutdown hooks only. */
+    /**
+     * Close every tracked resource across all threads — use in shutdown hooks only.
+     */
     public static void emergencyCleanup() {
         log.warn("[Playwright] Emergency cleanup");
         threadToBrowserCtx.values().forEach(PlaywrightInstanceProvider::closeQuietly);
@@ -159,16 +163,16 @@ public class PlaywrightInstanceProvider {
 
     private Browser launchBrowser(Playwright playwright, int debugPort) {
         BrowserType.LaunchOptions opts = new BrowserType.LaunchOptions()
-                .setHeadless(headless)
-                .setArgs(buildArgs(debugPort))
-                .setTimeout(30_000);
-        if (headless) opts.setChannel("chromium");
+            .setHeadless(headless)
+            .setArgs(buildArgs(debugPort))
+            .setTimeout(30_000);
+        if(headless) opts.setChannel("chromium");
         return playwright.chromium().launch(opts);
     }
 
     private List<String> buildArgs(int debugPort) {
         List<String> args = new ArrayList<>();
-        if (!headless) args.add("--remote-debugging-port=" + debugPort);
+        if(!headless) args.add("--remote-debugging-port=" + debugPort);
         args.add("--no-sandbox");
         args.add("--disable-dev-shm-usage");
         args.add("--disable-background-timer-throttling");
@@ -181,7 +185,7 @@ public class PlaywrightInstanceProvider {
         args.add("--disable-blink-features=AutomationControlled");
         args.add("--no-first-run");
         args.add("--no-default-browser-check");
-        if (headless) {
+        if(headless) {
             args.add("--disable-gpu");
             args.add("--disable-software-rasterizer");
         }
@@ -189,34 +193,40 @@ public class PlaywrightInstanceProvider {
     }
 
     private void blockUrls(BrowserContext ctx) {
-        if (blockedUrls == null) return;
-        blockedUrls.stream().map(String::trim).filter(p -> !p.isBlank()).forEach(pattern ->
-                ctx.route(pattern, route -> {
-                    log.debug("[Playwright] Blocked: {}", route.request().url());
-                    route.abort();
-                }));
+        if(blockedUrls == null) return;
+        blockedUrls.stream().map(String::trim)
+            .filter(p -> !p.isBlank()).forEach(pattern ->
+                                                   ctx.route(pattern, route -> {
+                                                       log.debug("[Playwright] Blocked: {}",
+                                                                 route.request().url());
+                                                       route.abort();
+                                                   }));
     }
 
     private void closeExistingBrowser(long tid) {
         Browser existing = threadToBrowser.get(tid);
-        if (existing != null && existing.isConnected()) {
-            log.warn("[Playwright] tid={} — closing stale browser before new one", tid);
+        if(existing != null && existing.isConnected()) {
+            log.warn("[Playwright] tid = {} — closing stale browser before new one", tid);
             closeBrowserQuietly(existing);
             threadToBrowser.remove(tid);
         }
     }
 
     private static void closeQuietly(AutoCloseable resource) {
-        if (resource != null) {
-            try { resource.close(); } catch (Exception e) {
+        if(resource != null) {
+            try {
+                resource.close();
+            } catch (Exception e) {
                 log.warn("[Playwright] Close error: {}", e.getMessage());
             }
         }
     }
 
     private static void closeBrowserQuietly(Browser b) {
-        if (b != null && b.isConnected()) {
-            try { b.close(); } catch (Exception e) {
+        if(b != null && b.isConnected()) {
+            try {
+                b.close();
+            } catch (Exception e) {
                 log.warn("[Playwright] Browser close error: {}", e.getMessage());
             }
         }

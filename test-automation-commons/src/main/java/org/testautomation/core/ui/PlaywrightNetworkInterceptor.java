@@ -50,8 +50,6 @@ public class PlaywrightNetworkInterceptor {
         page.route("**/*", this::handleRoute);
     }
 
-    // -------------------------------------------------------------------------
-
     private void handleRoute(Route route) {
         String url = route.request().url();
         String match = mocks.keySet().stream().filter(p -> matches(url, p)).findFirst().orElse(null);
