@@ -2,6 +2,8 @@ package org.testautomation.commons.config;
 
 import io.cucumber.java.Scenario;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,12 +55,12 @@ public class UserPoolManager {
     @PostConstruct
     public void init() {
         userPool = usersConfig.isBlank()
-                ? new String[]{"default_user"}
-                : usersConfig.split(",");
+                   ? new String[]{"default_user"}
+                   : usersConfig.split(",");
 
         int slots = executionConfig != null
-                ? executionConfig.getThreadCount()
-                : Integer.parseInt(System.getProperty("parallel.threads", "1"));
+                    ? executionConfig.getThreadCount()
+                    : Integer.parseInt(System.getProperty("parallel.threads", "1"));
 
         semaphore = new Semaphore(Math.max(1, slots));
         log.info("UserPoolManager — pool={} users, semaphore={} slots", userPool.length, slots);
@@ -66,7 +68,7 @@ public class UserPoolManager {
 
     public UserSession acquireUser() {
         try {
-            if (!semaphore.tryAcquire(5, TimeUnit.MINUTES)) {
+            if(!semaphore.tryAcquire(5, TimeUnit.MINUTES)) {
                 throw new IllegalStateException("Timed out waiting for a free user slot after 5 minutes");
             }
         } catch (InterruptedException e) {
@@ -75,32 +77,32 @@ public class UserPoolManager {
         }
 
         Scenario scenario = ScenarioContextHolder.getScenario();
-        if (scenario == null) throw new IllegalStateException("ScenarioContextHolder has no Scenario — call from @Before only");
+        if(scenario == null) throw new IllegalStateException("ScenarioContextHolder has no Scenario — call from @Before only");
 
         String username = nextUser(scenario).trim();
         UserSession session = new UserSession(username, defaultPassword);
         activeSessions.put(scenario.getId(), session);
 
         log.info("Scenario [{}] acquired user '{}' (thread={})",
-                scenario.getId(), username, Thread.currentThread().getName());
+                 scenario.getId(), username, Thread.currentThread().getName());
         return session;
     }
 
     public void releaseUser(Scenario scenario) {
-        if (scenario == null) return;
+        if(scenario == null) return;
         UserSession session = activeSessions.remove(scenario.getId());
-        if (session != null) {
+        if(session != null) {
             semaphore.release();
             log.info("Scenario [{}] released user '{}' (thread={})",
-                    scenario.getId(), session.getUsername(), Thread.currentThread().getName());
+                     scenario.getId(), session.getUsername(), Thread.currentThread().getName());
         }
     }
 
     public UserSession getCurrentSession() {
         Scenario scenario = ScenarioContextHolder.getScenario();
-        if (scenario == null) throw new IllegalStateException("No active scenario in ScenarioContextHolder");
+        if(scenario == null) throw new IllegalStateException("No active scenario in ScenarioContextHolder");
         UserSession session = activeSessions.get(scenario.getId());
-        if (session == null) throw new IllegalStateException("No active user session for scenario: " + scenario.getId());
+        if(session == null) throw new IllegalStateException("No active user session for scenario: " + scenario.getId());
         return session;
     }
 
@@ -109,11 +111,11 @@ public class UserPoolManager {
      * Tag-specific pools are defined as: {@code test.users.pool.<tagName>=user1,user2}
      */
     private String nextUser(Scenario scenario) {
-        if (environment != null && scenario != null) {
+        if(environment != null && scenario != null) {
             for (String tag : scenario.getSourceTagNames()) {
                 String key = "test.users.pool." + tag.replace("@", "");
                 String tagPool = environment.getProperty(key);
-                if (tagPool != null && !tagPool.isBlank()) {
+                if(tagPool != null && !tagPool.isBlank()) {
                     String[] pool = tagPool.split(",");
                     return pool[index.getAndUpdate(i -> (i + 1) % pool.length)].trim();
                 }
@@ -122,18 +124,15 @@ public class UserPoolManager {
         return userPool[index.getAndUpdate(i -> (i + 1) % userPool.length)];
     }
 
+    @Getter
+    @RequiredArgsConstructor
     public static class UserSession {
         private final String username;
         private final String password;
         private final long startedAt = System.currentTimeMillis();
 
-        public UserSession(String username, String password) {
-            this.username = username;
-            this.password = password;
+        public long elapsedMinutes() {
+            return (System.currentTimeMillis() - startedAt) / 60_000;
         }
-
-        public String getUsername() { return username; }
-        public String getPassword() { return password; }
-        public long elapsedMinutes() { return (System.currentTimeMillis() - startedAt) / 60_000; }
     }
 }

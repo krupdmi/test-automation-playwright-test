@@ -30,25 +30,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @Slf4j
+@Getter
 public class RedisDriver implements InitializingBean {
 
-    private static final ObjectMapper JSON_MAPPER    = new ObjectMapper();
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
     private static final ObjectMapper MSGPACK_MAPPER = new ObjectMapper(new MessagePackFactory());
-    private static final int          MAX_CACHE      = 1000;
+    private static final int MAX_CACHE = 1000;
 
     private final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
 
     @Value("${spring.data.redis.host}")
-    @Getter private String host;
+    private String host;
 
     @Value("${spring.data.redis.port}")
-    @Getter private int port;
+    private int port;
 
     @Value("${spring.data.redis.password}")
     private String password;
 
     @Value("${spring.data.redis.database:0}")
-    @Getter private int database;
+    private int database;
 
     private RedisTemplate<String, String> template;
     private JedisPool jedisPool;
@@ -87,8 +88,6 @@ public class RedisDriver implements InitializingBean {
         this.jedisPool = new JedisPool(cfg, host, port, 2000, password, database);
     }
 
-    // -------------------------------------------------------------------------
-
     public void set(String key, Object value, Duration ttl) {
         try {
             String str = value instanceof String ? (String) value : JSON_MAPPER.writeValueAsString(value);
@@ -101,11 +100,11 @@ public class RedisDriver implements InitializingBean {
 
     public <T> T get(String key, Class<T> type) {
         Object cached = cache.get(key);
-        if (type.isInstance(cached)) return type.cast(cached);
+        if(type.isInstance(cached)) return type.cast(cached);
 
         try {
             String raw = template.opsForValue().get(key);
-            if (raw == null) return null;
+            if(raw == null) return null;
             T result = type.equals(String.class) ? type.cast(raw) : JSON_MAPPER.readValue(raw, type);
             putCache(key, result);
             return result;
@@ -115,11 +114,13 @@ public class RedisDriver implements InitializingBean {
         }
     }
 
-    /** Reads a MessagePack-encoded value directly via Jedis. */
+    /**
+     * Reads a MessagePack-encoded value directly via Jedis.
+     */
     public <T> T getMsgPack(String key, Class<T> type) {
         try (Jedis jedis = jedisPool.getResource()) {
             byte[] bytes = jedis.get(key.getBytes());
-            if (bytes == null) return null;
+            if(bytes == null) return null;
             T result = MSGPACK_MAPPER.readValue(bytes, type);
             putCache(key, result);
             return result;
@@ -134,10 +135,8 @@ public class RedisDriver implements InitializingBean {
         cache.remove(key);
     }
 
-    // -------------------------------------------------------------------------
-
     private void putCache(String key, Object value) {
-        if (cache.size() >= MAX_CACHE) cache.clear();
+        if(cache.size() >= MAX_CACHE) cache.clear();
         cache.put(key, value);
     }
 
