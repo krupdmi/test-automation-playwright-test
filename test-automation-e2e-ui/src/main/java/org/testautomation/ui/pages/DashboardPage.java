@@ -11,10 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DashboardPage extends BasePage {
 
     // ── Selectors ─────────────────────────────────────────────────────────────
-    private static final String DASHBOARD_HEADER  = "[data-testid='dashboard-header']";
-    private static final String WELCOME_MESSAGE   = "[data-testid='welcome-message']";
-    private static final String USER_MENU         = "[data-testid='user-menu']";
-    private static final String LOGOUT_BUTTON     = "[data-testid='logout-button']";
+    private static final String DASHBOARD_HEADER = "[data-testid='dashboard-header']";
+    private static final String WELCOME_MESSAGE = "[data-testid='welcome-message']";
+    private static final String USER_MENU = "[data-testid='user-menu']";
+    private static final String LOGOUT_BUTTON = "[data-testid='logout-button']";
 
     public DashboardPage(Page page) {
         super(page);

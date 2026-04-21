@@ -32,10 +32,10 @@ public final class WaitActions {
                 new Page.WaitForSelectorOptions().setState(WaitForSelectorState.HIDDEN));
     }
 
-    public static void waitForNavigation(Page page, Runnable action) {
-        page.waitForNavigation(action);
+    public static void waitForPageNavigation(Page page, Runnable action) {
+        action.run();
+        page.waitForLoadState();
     }
-
     public static void waitForNetworkIdle(Page page) {
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }

@@ -27,7 +27,9 @@ public class PlaywrightCurlCaptureService {
         context.onRequest(this::captureRequest);
     }
 
-    /** Returns all captured cURL commands for the current thread, then clears them. */
+    /**
+     * Returns all captured cURL commands for the current thread, then clears them.
+     */
     public String flushCapturedCurls() {
         StringBuilder sb = capturedCurls.remove(Thread.currentThread().getId());
         return sb != null ? sb.toString() : "";
@@ -37,8 +39,8 @@ public class PlaywrightCurlCaptureService {
         try {
             String curl = buildCurl(request);
             capturedCurls
-                    .computeIfAbsent(Thread.currentThread().getId(), id -> new StringBuilder())
-                    .append(curl).append("\n\n");
+                .computeIfAbsent(Thread.currentThread().getId(), id -> new StringBuilder())
+                .append(curl).append("\n\n");
         } catch (Exception e) {
             log.debug("Could not capture request as cURL: {}", e.getMessage());
         }
@@ -46,12 +48,11 @@ public class PlaywrightCurlCaptureService {
 
     private String buildCurl(Request request) {
         StringBuilder sb = new StringBuilder("curl -X ").append(request.method())
-                .append(" '").append(request.url()).append("'");
+            .append(" '").append(request.url()).append("'");
 
-        Map<String, String> headers = request.headers();
-        if (headers != null) {
-            headers.forEach((k, v) -> sb.append(" \\\n  -H '").append(k).append(": ").append(v).append("'"));
-        }
+        request.headersArray().forEach(header -> sb.append(" \\\n  -H '")
+            .append(header.name).append(": ")
+            .append(header.value).append("'"));
 
         String postData = request.postData();
         if (postData != null && !postData.isBlank()) {
