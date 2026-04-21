@@ -1,21 +1,33 @@
 package org.testautomation.commons.config;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Root Spring Boot configuration for the test application context.
- * Scans both {@code org.testautomation.core} and {@code org.testautomation.commons}
- * so infrastructure beans (Playwright, BaseApiClient, DB drivers) are always available.
+ * Unified test configuration for both UI and API test modules.
+ * Playwright beans are conditionally loaded only when
+ * PlaywrightInstanceProvider is on the classpath
  */
-@SpringBootApplication
+@Configuration
+@EnableAutoConfiguration
+@EntityScan("org.testautomation.commons.entities")
+@EnableJpaRepositories("org.testautomation.commons.repository")
 @ComponentScan(basePackages = {
-        "org.testautomation.core",
-        "org.testautomation.commons"
+    "org.testautomation.core",
+    "org.testautomation.commons",
+    "org.testautomation.ui",
+    "org.testautomation.api"
 })
-@EntityScan(basePackages = "org.testautomation.commons.entities")
-@EnableJpaRepositories(basePackages = "org.testautomation.commons.repository")
 public class TestConfig {
+
+    @Configuration
+    @ConditionalOnClass(name = "org.testautomation.core.ui.PlaywrightInstanceProvider")
+    @Import(org.testautomation.core.ui.PlaywrightInstanceProvider.class)
+    static class UIConfiguration {
+    }
 }

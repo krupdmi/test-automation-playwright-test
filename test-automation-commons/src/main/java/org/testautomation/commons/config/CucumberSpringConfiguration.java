@@ -12,4 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 @CucumberContextConfiguration
 @SpringBootTest(classes = TestConfig.class)
 public class CucumberSpringConfiguration {
+    // This class serves as the unified Spring context configuration for Cucumber tests.
+    // Both UI and API modules will use this shared configuration.
 }
